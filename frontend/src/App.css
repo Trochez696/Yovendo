@@ -1,0 +1,35 @@
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px;
+  font-family: "Segoe UI", sans-serif;
+}
+
+.row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.card {
+  border: 1px solid #d7dde5;
+  border-radius: 12px;
+  padding: 16px;
+  margin: 14px 0;
+  background: #fff;
+}
+
+input, select, button {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #c4cfdd;
+}
+
+button {
+  background: #00395f;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+}
