@@ -37,6 +37,55 @@ function App() {
   const [summary, setSummary] = useState<Record<string, number>>({});
 
   const role = useMemo(() => me?.roles?.[0] ?? '', [me]);
+  // Calcula indicadores por consultor para el tablero del director.
+  const consultantBoard = useMemo(() => {
+    const board = new Map<string, {
+      name: string;
+      salesCount: number;
+      salesAmount: number;
+      callsCount: number;
+      callsMinutes: number;
+      lastActivity: string;
+    }>();
+
+    const ensure = (name: string) => {
+      if (!board.has(name)) {
+        board.set(name, {
+          name,
+          salesCount: 0,
+          salesAmount: 0,
+          callsCount: 0,
+          callsMinutes: 0,
+          lastActivity: '',
+        });
+      }
+      return board.get(name)!;
+    };
+
+    sales.forEach((sale) => {
+      const key = sale.consultantName || 'Sin consultor';
+      const row = ensure(key);
+      row.salesCount += 1;
+      row.salesAmount += sale.amount || 0;
+      if (!row.lastActivity || sale.saleDate > row.lastActivity) row.lastActivity = sale.saleDate;
+    });
+
+    calls.forEach((call) => {
+      const key = call.consultantName || 'Sin consultor';
+      const row = ensure(key);
+      row.callsCount += 1;
+      row.callsMinutes += call.durationMinutes || 0;
+      if (!row.lastActivity || call.callDate > row.lastActivity) row.lastActivity = call.callDate;
+    });
+
+    return Array.from(board.values())
+      .map((row) => ({
+        ...row,
+        effectiveness: row.callsCount > 0 ? row.salesCount / row.callsCount : row.salesCount,
+        avgTicket: row.salesCount > 0 ? row.salesAmount / row.salesCount : 0,
+      }))
+      .sort((a, b) => b.salesAmount - a.salesAmount);
+  }, [sales, calls]);
 
   useEffect(() => {
     if (!token) return;
@@ -82,69 +131,150 @@ function App() {
 
   if (!token) {
     return (
-      <main className="container">
-        <h1>Yovendo</h1>
-        <p>Inicia sesion para acceder segun tu perfil.</p>
-        <form onSubmit={login} className="card">
-          <input name="username" placeholder="Usuario" />
-          <input name="password" type="password" placeholder="Contrasena" />
-          <button type="submit">Entrar</button>
-          {error && <small>{error}</small>}
-        </form>
+      <main className="container login-page">
+        <div className="bg-shape bg-shape-a" />
+        <div className="bg-shape bg-shape-b" />
+        <section className="login-card card reveal">
+          <h1>Yovendo</h1>
+          <p>Inicia sesion para acceder segun tu perfil.</p>
+          <form onSubmit={login} className="form-stack">
+            <input name="username" placeholder="Usuario" />
+            <input name="password" type="password" placeholder="Contrasena" />
+            <button type="submit">Entrar</button>
+            {error && <small className="error">{error}</small>}
+          </form>
+        </section>
       </main>
     );
   }
 
   return (
     <main className="container">
+      <div className="bg-shape bg-shape-a" />
+      <div className="bg-shape bg-shape-b" />
       <header className="row">
         <div>
           <h1>Yovendo Panel</h1>
-          <p>{me?.username} | perfil: {role}</p>
+          <p>{me?.username} | perfil: <span className="badge role">{role}</span></p>
         </div>
         <button onClick={logout}>Cerrar sesion</button>
       </header>
 
-      <section className="card">
+      <section className="card reveal">
         <h2>Notificaciones</h2>
-        {notifications.length === 0 ? <p>Sin notificaciones.</p> : notifications.map((n) => <p key={n.id}>[{n.type}] {n.message}</p>)}
+        {notifications.length === 0 ? (
+          <p>Sin notificaciones.</p>
+        ) : (
+          <div className="list">
+            {notifications.map((n) => (
+              <p key={n.id} className="list-item">
+                <span className="badge">{n.type}</span> {n.message}
+              </p>
+            ))}
+          </div>
+        )}
       </section>
 
-      {role === 'ADMIN' && (
-        <section className="card">
+      <div className="dashboard-grid">
+        {role === 'ADMIN' && (
+        <section className="card reveal">
           <h2>Administracion de usuarios</h2>
+          {/* Formulario para crear usuarios rapidamente */}
           <CreateUserForm token={token} roles={roles} onCreated={(u) => setUsers((prev) => [u, ...prev])} />
-          {users.map((u) => <p key={u.id}>{u.username} | {u.email} | {u.active ? 'Activo' : 'Inactivo'} | {u.roles.join(', ')}</p>)}
+          <div className="list">
+            {users.map((u) => (
+              <p className="list-item" key={u.id}>
+                <strong>{u.username}</strong> | {u.email} | <span className={u.active ? 'ok' : 'warn'}>{u.active ? 'Activo' : 'Inactivo'}</span> | {u.roles.join(', ')}
+              </p>
+            ))}
+          </div>
         </section>
       )}
 
       {(role === 'SUPERVISOR' || role === 'ADMIN') && (
-        <section className="card">
+        <section className="card reveal">
           <h2>Control de inventario</h2>
           <InventoryForm token={token} onCreated={(item) => setInventory((prev) => [item, ...prev])} />
-          {inventory.map((i) => <p key={i.id}>{i.name}: {i.quantity} {i.unit} (min: {i.minStock})</p>)}
+          <div className="list">
+            {inventory.map((i) => (
+              <p key={i.id} className="list-item">
+                <strong>{i.name}</strong>: {i.quantity} {i.unit} (min: {i.minStock})
+              </p>
+            ))}
+          </div>
         </section>
       )}
 
       {role === 'CONSULTOR' && (
-        <section className="card">
+        <section className="card reveal">
           <h2>Historial de ventas y llamadas</h2>
           <SalesForm token={token} onCreated={(item) => setSales((prev) => [item, ...prev])} />
           <CallsForm token={token} onCreated={(item) => setCalls((prev) => [item, ...prev])} />
-          {sales.map((s) => <p key={s.id}>Venta {s.clientName} - ${s.amount}</p>)}
-          {calls.map((c) => <p key={c.id}>Llamada {c.clientName} - {c.durationMinutes} min</p>)}
+          <div className="list">
+            {sales.map((s) => <p className="list-item" key={s.id}>Venta {s.clientName} - ${s.amount}</p>)}
+            {calls.map((c) => <p className="list-item" key={c.id}>Llamada {c.clientName} - {c.durationMinutes} min</p>)}
+          </div>
         </section>
       )}
 
       {role === 'DIRECTOR' && (
-        <section className="card">
-          <h2>Seguimiento de directores</h2>
-          <p>Total ventas: {summary.totalSales ?? 0}</p>
-          <p>Total llamadas: {summary.totalCalls ?? 0}</p>
-          <p>Insumos en stock bajo: {summary.lowStockItems ?? 0}</p>
-          {sales.slice(0, 5).map((s) => <p key={s.id}>Venta reciente: {s.consultantName} {'->'} ${s.amount}</p>)}
+        <section className="card reveal">
+          <h2>Tablero de seguimiento de consultores</h2>
+          {/* KPIs para toma de decisiones del director */}
+          <div className="stats">
+            <p className="stat-box">Total ventas: <strong>{summary.totalSales ?? 0}</strong></p>
+            <p className="stat-box">Total llamadas: <strong>{summary.totalCalls ?? 0}</strong></p>
+            <p className="stat-box">Stock bajo: <strong>{summary.lowStockItems ?? 0}</strong></p>
+            <p className="stat-box">Consultores activos: <strong>{consultantBoard.length}</strong></p>
+          </div>
+
+          {/* Ranking de desempeno comercial */}
+          <h3>Ranking por consultor</h3>
+          {consultantBoard.length === 0 ? (
+            <p>Aun no hay actividad de consultores.</p>
+          ) : (
+            <div className="table-wrap">
+              <table className="kpi-table">
+                <thead>
+                  <tr>
+                    <th>Consultor</th>
+                    <th>Ventas</th>
+                    <th>Monto total</th>
+                    <th>Llamadas</th>
+                    <th>Minutos</th>
+                    <th>Efectividad</th>
+                    <th>Ticket prom.</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {consultantBoard.map((c) => (
+                    <tr key={c.name}>
+                      <td>{c.name}</td>
+                      <td>{c.salesCount}</td>
+                      <td>${c.salesAmount.toFixed(2)}</td>
+                      <td>{c.callsCount}</td>
+                      <td>{c.callsMinutes}</td>
+                      <td>{(c.effectiveness * 100).toFixed(1)}%</td>
+                      <td>${c.avgTicket.toFixed(2)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {/* Actividad reciente para seguimiento operativo */}
+          <h3>Ultimas ventas registradas</h3>
+          <div className="list">
+            {sales.slice(0, 6).map((s) => (
+              <p className="list-item" key={s.id}>
+                {s.consultantName} {'->'} ${s.amount} | cliente: {s.clientName}
+              </p>
+            ))}
+          </div>
         </section>
       )}
+      </div>
     </main>
   );
 }
@@ -166,7 +296,7 @@ function CreateUserForm({ token, roles, onCreated }: { token: string; roles: Rol
     e.currentTarget.reset();
   };
   return (
-    <form className="row" onSubmit={submit}>
+    <form className="row form-grid" onSubmit={submit}>
       <input name="username" placeholder="Usuario" />
       <input name="email" placeholder="Correo" />
       <input name="password" type="password" placeholder="Contrasena" />
@@ -194,7 +324,7 @@ function InventoryForm({ token, onCreated }: { token: string; onCreated: (i: Inv
     e.currentTarget.reset();
   };
   return (
-    <form className="row" onSubmit={submit}>
+    <form className="row form-grid" onSubmit={submit}>
       <input name="name" placeholder="Insumo" />
       <input name="quantity" type="number" placeholder="Cantidad" />
       <input name="minStock" type="number" placeholder="Stock minimo" />
@@ -217,7 +347,7 @@ function SalesForm({ token, onCreated }: { token: string; onCreated: (s: Sale) =
     e.currentTarget.reset();
   };
   return (
-    <form className="row" onSubmit={submit}>
+    <form className="row form-grid" onSubmit={submit}>
       <input name="clientName" placeholder="Cliente venta" />
       <input name="amount" type="number" placeholder="Monto" />
       <input name="description" placeholder="Descripcion" />
@@ -243,7 +373,7 @@ function CallsForm({ token, onCreated }: { token: string; onCreated: (c: Call) =
     e.currentTarget.reset();
   };
   return (
-    <form className="row" onSubmit={submit}>
+    <form className="row form-grid" onSubmit={submit}>
       <input name="clientName" placeholder="Cliente llamada" />
       <input name="callType" placeholder="Tipo" />
       <input name="duration" type="number" placeholder="Duracion min" />
