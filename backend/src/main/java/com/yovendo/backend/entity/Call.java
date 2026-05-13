@@ -46,6 +46,7 @@ public class Call {
     
     @PrePersist
     protected void onCreate() {
+        // Si el frontend no envia fecha, se registra el momento de creacion.
         if (callDate == null) {
             callDate = LocalDateTime.now();
         }

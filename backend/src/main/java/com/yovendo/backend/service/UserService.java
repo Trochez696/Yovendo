@@ -17,16 +17,20 @@ import java.util.List;
 @RequiredArgsConstructor
 public class UserService {
 
+    // Repositorios para usuarios y roles.
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
+    // Codificador BCrypt para no guardar contrasenas en texto plano.
     private final PasswordEncoder passwordEncoder;
 
+    // Lista usuarios existentes sin exponer contrasenas.
     public List<UserDTO> getAllUsers() {
         return userRepository.findAll().stream()
                 .map(this::toUserDTO)
                 .toList();
     }
 
+    // Consulta un usuario por id.
     public UserDTO getUserById(Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
@@ -35,6 +39,7 @@ public class UserService {
 
     @Transactional
     public UserDTO createUser(String username, String password, String email, List<String> roleNames) {
+        // Evita duplicados y guarda la contrasena cifrada antes de persistir.
         if (userRepository.existsByUsername(username)) {
             throw new RuntimeException("El nombre de usuario ya existe");
         }
@@ -60,6 +65,7 @@ public class UserService {
 
     @Transactional
     public UserDTO updateUser(Long id, String username, String email, List<String> roleNames) {
+        // Permite modificar datos basicos y roles sin cambiar la contrasena.
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
@@ -113,6 +119,7 @@ public class UserService {
     }
 
     public List<RoleDTO> getAllRoles() {
+        // Roles disponibles en la aplicacion.
         return roleRepository.findAll().stream()
                 .map(this::toRoleDTO)
                 .toList();
@@ -120,6 +127,7 @@ public class UserService {
 
     @Transactional
     public RoleDTO createRole(String name, String description) {
+        // No permite crear dos roles con el mismo nombre.
         if (roleRepository.existsByName(name)) {
             throw new RuntimeException("El rol ya existe");
         }
@@ -132,6 +140,7 @@ public class UserService {
     }
 
     private UserDTO toUserDTO(User user) {
+        // Convierte User a DTO y transforma Set<Role> en lista de nombres.
         return UserDTO.builder()
                 .id(user.getId())
                 .username(user.getUsername())
@@ -142,6 +151,7 @@ public class UserService {
     }
 
     private RoleDTO toRoleDTO(Role role) {
+        // Convierte Role a DTO para respuestas de la API.
         return RoleDTO.builder()
                 .id(role.getId())
                 .name(role.getName())

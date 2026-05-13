@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+// DTO simple para consultar y crear roles.
 public class RoleDTO {
     public Long id;
     public String name;

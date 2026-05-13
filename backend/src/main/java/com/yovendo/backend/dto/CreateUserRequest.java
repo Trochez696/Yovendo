@@ -9,6 +9,7 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+// Cuerpo esperado para crear o actualizar usuarios desde administracion.
 public class CreateUserRequest {
     private String username;
     private String password;

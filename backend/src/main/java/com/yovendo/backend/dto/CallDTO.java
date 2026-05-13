@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+// DTO de llamadas para evitar exponer directamente la entidad JPA.
 public class CallDTO {
     public Long id;
     public String clientName;

@@ -44,6 +44,7 @@ public class Sale {
     
     @PrePersist
     protected void onCreate() {
+        // Si no se especifica fecha de venta, se usa el momento del registro.
         if (saleDate == null) {
             saleDate = LocalDateTime.now();
         }

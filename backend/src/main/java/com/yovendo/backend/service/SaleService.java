@@ -20,6 +20,7 @@ public class SaleService {
     private final NotificationService notificationService;
 
     public List<SaleDTO> getSalesForUser(User user) {
+        // El consultor solo consulta sus ventas; administracion y direccion consultan todo.
         boolean isConsultor = user.getRoles().stream().anyMatch(r -> "CONSULTOR".equalsIgnoreCase(r.getName()));
         List<Sale> sales = isConsultor ? saleRepository.findByConsultantIdOrderBySaleDateDesc(user.getId()) : saleRepository.findAll();
         return sales.stream().map(this::toDTO).toList();
@@ -27,6 +28,7 @@ public class SaleService {
 
     @Transactional
     public SaleDTO createSale(SaleDTO dto, String username) {
+        // La venta se asigna al usuario autenticado y dispara notificacion a direccion.
         User consultant = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Usuario consultor no encontrado"));
 

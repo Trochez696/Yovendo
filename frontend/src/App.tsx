@@ -1,16 +1,27 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
 import './App.css';
 
 const API_URL = 'http://localhost:8080/api';
 
+// Tipos que reflejan los DTO principales del backend.
 type User = { id: number; username: string; email: string; active: boolean; roles: string[] };
 type Role = { id: number; name: string; description: string };
-type Inventory = { id: number; name: string; quantity: number; minStock: number; unit: string; description: string };
+type Inventory = {
+  id: number;
+  name: string;
+  quantity: number;
+  minStock: number;
+  maxStock: number;
+  unit: string;
+  price: number;
+  description: string;
+};
 type Sale = { id: number; clientName: string; amount: number; saleDate: string; description: string; consultantName: string };
 type Call = { id: number; clientName: string; callDate: string; notes: string; callType: string; durationMinutes: number; consultantName: string };
 type Notification = { id: number; message: string; type: string; read: boolean; createdAt: string };
 
+// Cliente HTTP comun: agrega JSON y el token Bearer cuando existe sesion.
 async function api<T>(path: string, token?: string, options: RequestInit = {}): Promise<T> {
   const response = await fetch(`${API_URL}${path}`, {
     ...options,
@@ -25,6 +36,7 @@ async function api<T>(path: string, token?: string, options: RequestInit = {}): 
 }
 
 function App() {
+  // Estado global simple para manejar sesion, datos principales y panel por rol.
   const [token, setToken] = useState(localStorage.getItem('token') || '');
   const [me, setMe] = useState<User | null>(null);
   const [error, setError] = useState('');
@@ -38,8 +50,14 @@ function App() {
 
   const role = useMemo(() => me?.roles?.[0] ?? '', [me]);
 
+  const loadInventory = useCallback(async () => {
+    const items = await api<Inventory[]>('/inventory', token);
+    setInventory(items);
+  }, [token]);
+
   useEffect(() => {
     if (!token) return;
+    // Al iniciar con token se recupera el usuario actual y sus notificaciones.
     localStorage.setItem('token', token);
     Promise.all([
       api<User>('/auth/me', token).then(setMe),
@@ -49,17 +67,19 @@ function App() {
 
   useEffect(() => {
     if (!token || !role) return;
+    // Cada rol carga solo los modulos que puede ver en la interfaz.
     if (role === 'ADMIN') {
       Promise.all([api<User[]>('/users', token).then(setUsers), api<Role[]>('/users/roles', token).then(setRoles)]);
     }
-    if (role === 'SUPERVISOR' || role === 'DIRECTOR' || role === 'ADMIN') api<Inventory[]>('/inventory', token).then(setInventory);
+    if (role === 'SUPERVISOR' || role === 'DIRECTOR' || role === 'ADMIN') loadInventory().catch((err) => setError(err.message));
     if (role === 'CONSULTOR' || role === 'DIRECTOR' || role === 'ADMIN') {
       Promise.all([api<Sale[]>('/sales', token).then(setSales), api<Call[]>('/calls', token).then(setCalls)]);
     }
     if (role === 'DIRECTOR' || role === 'ADMIN') api<Record<string, number>>('/activities/summary', token).then(setSummary);
-  }, [role, token]);
+  }, [role, token, loadInventory]);
 
   const logout = () => {
+    // Limpia sesion tanto en React como en localStorage.
     setToken('');
     setMe(null);
     localStorage.removeItem('token');
@@ -70,6 +90,7 @@ function App() {
     setError('');
     const form = new FormData(event.currentTarget);
     try {
+      // Si el backend autentica, guarda el JWT para siguientes peticiones.
       const data = await api<{ token: string }>('/auth/login', undefined, {
         method: 'POST',
         body: JSON.stringify({ username: form.get('username'), password: form.get('password') }),
@@ -121,8 +142,12 @@ function App() {
       {(role === 'SUPERVISOR' || role === 'ADMIN') && (
         <section className="card">
           <h2>Control de inventario</h2>
-          <InventoryForm token={token} onCreated={(item) => setInventory((prev) => [item, ...prev])} />
-          {inventory.map((i) => <p key={i.id}>{i.name}: {i.quantity} {i.unit} (min: {i.minStock})</p>)}
+          <InventoryForm token={token} onCreated={loadInventory} />
+          {inventory.map((i) => (
+            <p key={i.id}>
+              {i.name}: {i.quantity} {i.unit || 'unid.'} (min: {i.minStock}, max: {i.maxStock || 'N/A'})
+            </p>
+          ))}
         </section>
       )}
 
@@ -153,6 +178,7 @@ function CreateUserForm({ token, roles, onCreated }: { token: string; roles: Rol
   const submit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const form = new FormData(e.currentTarget);
+    // Envia el alta al backend y agrega el usuario al listado local.
     const created = await api<User>('/users', token, {
       method: 'POST',
       body: JSON.stringify({
@@ -176,31 +202,50 @@ function CreateUserForm({ token, roles, onCreated }: { token: string; roles: Rol
   );
 }
 
-function InventoryForm({ token, onCreated }: { token: string; onCreated: (i: Inventory) => void }) {
+function InventoryForm({ token, onCreated }: { token: string; onCreated: () => void | Promise<void> }) {
+  const [message, setMessage] = useState('');
+  const [saving, setSaving] = useState(false);
+
   const submit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const f = new FormData(e.currentTarget);
-    const created = await api<Inventory>('/inventory', token, {
-      method: 'POST',
-      body: JSON.stringify({
-        name: f.get('name'),
-        quantity: Number(f.get('quantity')),
-        minStock: Number(f.get('minStock')),
-        unit: f.get('unit'),
-        description: f.get('description'),
-      }),
-    });
-    onCreated(created);
-    e.currentTarget.reset();
+    const formElement = e.currentTarget;
+    setMessage('');
+    setSaving(true);
+    const f = new FormData(formElement);
+    try {
+      // Convierte los campos numericos antes de enviarlos al backend.
+      await api<Inventory>('/inventory', token, {
+        method: 'POST',
+        body: JSON.stringify({
+          name: f.get('name'),
+          quantity: Number(f.get('quantity')),
+          minStock: Number(f.get('minStock')),
+          maxStock: Number(f.get('maxStock')),
+          unit: f.get('unit'),
+          price: Number(f.get('price') || 0),
+          description: f.get('description'),
+        }),
+      });
+      await onCreated();
+      formElement.reset();
+      setMessage('Insumo guardado en inventario.');
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : 'No se pudo guardar el insumo.');
+    } finally {
+      setSaving(false);
+    }
   };
   return (
     <form className="row" onSubmit={submit}>
-      <input name="name" placeholder="Insumo" />
-      <input name="quantity" type="number" placeholder="Cantidad" />
-      <input name="minStock" type="number" placeholder="Stock minimo" />
+      <input name="name" placeholder="Insumo" required />
+      <input name="quantity" type="number" placeholder="Cantidad" min="0" required />
+      <input name="minStock" type="number" placeholder="Stock minimo" min="0" required />
+      <input name="maxStock" type="number" placeholder="Stock maximo" min="0" />
       <input name="unit" placeholder="Unidad" />
+      <input name="price" type="number" placeholder="Precio" min="0" step="0.01" />
       <input name="description" placeholder="Descripcion" />
-      <button type="submit">Guardar</button>
+      <button type="submit" disabled={saving}>{saving ? 'Guardando...' : 'Guardar'}</button>
+      {message && <small className="form-message">{message}</small>}
     </form>
   );
 }
@@ -209,6 +254,7 @@ function SalesForm({ token, onCreated }: { token: string; onCreated: (s: Sale) =
   const submit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const f = new FormData(e.currentTarget);
+    // Registra una venta del consultor autenticado.
     const created = await api<Sale>('/sales', token, {
       method: 'POST',
       body: JSON.stringify({ clientName: f.get('clientName'), amount: Number(f.get('amount')), description: f.get('description') }),
@@ -230,6 +276,7 @@ function CallsForm({ token, onCreated }: { token: string; onCreated: (c: Call) =
   const submit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const f = new FormData(e.currentTarget);
+    // Registra una llamada del consultor autenticado.
     const created = await api<Call>('/calls', token, {
       method: 'POST',
       body: JSON.stringify({

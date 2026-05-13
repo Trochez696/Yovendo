@@ -43,12 +43,14 @@ public class InventoryItem {
     
     @PrePersist
     protected void onCreate() {
+        // Fechas automaticas para auditoria basica del insumo.
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
     }
     
     @PreUpdate
     protected void onUpdate() {
+        // Mantiene updatedAt sincronizado cada vez que JPA actualiza la fila.
         updatedAt = LocalDateTime.now();
     }
 }

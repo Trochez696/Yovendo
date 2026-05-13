@@ -19,6 +19,7 @@ public class CallService {
     private final UserRepository userRepository;
 
     public List<CallDTO> getCallsForUser(User user) {
+        // El consultor solo consulta sus registros; los demas perfiles autorizados consultan todo.
         boolean isConsultor = user.getRoles().stream().anyMatch(r -> "CONSULTOR".equalsIgnoreCase(r.getName()));
         List<Call> calls = isConsultor ? callRepository.findByConsultantIdOrderByCallDateDesc(user.getId()) : callRepository.findAll();
         return calls.stream().map(this::toDTO).toList();
@@ -26,6 +27,7 @@ public class CallService {
 
     @Transactional
     public CallDTO createCall(CallDTO dto, String username) {
+        // La relacion con el consultor se toma del usuario autenticado, no del cuerpo recibido.
         User consultant = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Usuario consultor no encontrado"));
 

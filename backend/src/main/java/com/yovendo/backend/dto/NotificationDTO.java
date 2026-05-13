@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+// DTO de notificaciones visibles para rol o usuario.
 public class NotificationDTO {
     public Long id;
     public String message;

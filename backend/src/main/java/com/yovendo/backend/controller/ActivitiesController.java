@@ -17,13 +17,17 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ActivitiesController {
 
+    // Repositorios usados para contar registros y construir el resumen general.
     private final SaleRepository saleRepository;
     private final CallRepository callRepository;
     private final InventoryRepository inventoryRepository;
 
+    // GET /api/activities/summary
+    // Solo ADMIN y DIRECTOR pueden ver indicadores globales de ventas, llamadas e inventario.
     @GetMapping("/summary")
     @PreAuthorize("hasAnyRole('ADMIN', 'DIRECTOR')")
     public ResponseEntity<Map<String, Object>> summary() {
+        // Resumen ejecutivo usado por perfiles que necesitan indicadores globales.
         long totalSales = saleRepository.count();
         long totalCalls = callRepository.count();
         long totalInventoryItems = inventoryRepository.count();

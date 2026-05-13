@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+// DTO de inventario usado por el frontend y por los servicios.
 public class InventoryItemDTO {
     public Long id;
     public String name;
