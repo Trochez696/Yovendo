@@ -41,6 +41,7 @@ public class JwtService {
     }
 
     private String buildToken(Map<String, Object> extraClaims, UserDetails userDetails, long expiration) {
+        // El username queda como subject y el token se firma con la clave HMAC configurada.
         return Jwts.builder()
                 .claims(extraClaims)
                 .subject(userDetails.getUsername())
@@ -72,6 +73,7 @@ public class JwtService {
     }
 
     private SecretKey getSignInKey() {
+        // La clave del properties esta en Base64 para cumplir el tamano requerido por jjwt.
         byte[] keyBytes = Base64.getDecoder().decode(secretKey);
         return Keys.hmacShaKeyFor(keyBytes);
     }

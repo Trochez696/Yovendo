@@ -11,6 +11,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+// Vista publica del usuario: no incluye contrasena ni datos sensibles.
 public class UserDTO {
     public Long id;
     public String username;

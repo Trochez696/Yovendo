@@ -18,19 +18,26 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SalesController {
 
+    // SaleService guarda ventas; UserRepository permite saber quien hizo la peticion.
     private final SaleService saleService;
     private final UserRepository userRepository;
 
+    // GET /api/sales
+    // El servicio decide si devuelve todas las ventas o solo las del consultor.
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'DIRECTOR', 'CONSULTOR')")
     public ResponseEntity<List<SaleDTO>> listSales(@AuthenticationPrincipal UserDetails userDetails) {
+        // Consultores ven sus ventas; administradores/directores ven todas.
         User user = userRepository.findByUsername(userDetails.getUsername()).orElseThrow();
         return ResponseEntity.ok(saleService.getSalesForUser(user));
     }
 
+    // POST /api/sales
+    // Registra una venta asociada al consultor autenticado.
     @PostMapping
     @PreAuthorize("hasRole('CONSULTOR')")
     public ResponseEntity<SaleDTO> createSale(@RequestBody SaleDTO request, @AuthenticationPrincipal UserDetails userDetails) {
+        // Registra la venta y la asocia con el consultor autenticado.
         return ResponseEntity.ok(saleService.createSale(request, userDetails.getUsername()));
     }
 }

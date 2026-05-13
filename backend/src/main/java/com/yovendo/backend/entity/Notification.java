@@ -36,6 +36,7 @@ public class Notification {
     
     @PrePersist
     protected void onCreate() {
+        // Fecha de creacion automatica al guardar la notificacion.
         createdAt = LocalDateTime.now();
     }
 }

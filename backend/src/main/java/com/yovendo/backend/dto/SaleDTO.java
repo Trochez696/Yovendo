@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+// DTO de ventas con datos del cliente y consultor asociado.
 public class SaleDTO {
     public Long id;
     public String clientName;

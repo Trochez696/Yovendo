@@ -34,6 +34,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         final String username;
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            // Si no hay Bearer token, la peticion continua como no autenticada.
             filterChain.doFilter(request, response);
             return;
         }
@@ -46,6 +47,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
 
                 if (jwtService.isTokenValid(jwt, userDetails)) {
+                    // Carga la autenticacion en el contexto para que @PreAuthorize pueda evaluar roles.
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                             userDetails,
                             null,
@@ -56,7 +58,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 }
             }
         } catch (Exception e) {
-            // Token inválido, continuar sin autenticación
+            // Token invalido: continuar sin autenticacion y dejar que Spring Security responda.
         }
 
         filterChain.doFilter(request, response);

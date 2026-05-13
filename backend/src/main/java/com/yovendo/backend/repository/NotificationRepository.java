@@ -8,6 +8,7 @@ import java.util.List;
 
 @Repository
 public interface NotificationRepository extends JpaRepository<Notification, Long> {
+    // Consultas para separar alertas por rol, usuario y estado de lectura.
     List<Notification> findByRecipientRoleAndReadFalse(String recipientRole);
     List<Notification> findByRecipientIdAndReadFalse(Long recipientId);
     List<Notification> findByRecipientRoleOrRecipientIdIsNullOrderByCreatedAtDesc(String recipientRole);

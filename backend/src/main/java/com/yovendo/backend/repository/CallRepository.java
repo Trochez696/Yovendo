@@ -9,6 +9,7 @@ import java.util.List;
 
 @Repository
 public interface CallRepository extends JpaRepository<Call, Long> {
+    // Consultas derivadas por nombre para filtrar llamadas sin escribir SQL manual.
     List<Call> findByConsultantIdOrderByCallDateDesc(Long consultantId);
     List<Call> findByCallDateBetween(LocalDateTime start, LocalDateTime end);
 }

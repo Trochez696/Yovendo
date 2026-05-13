@@ -23,6 +23,7 @@ public class NotificationController {
 
     @GetMapping
     public ResponseEntity<List<NotificationDTO>> listNotifications(@AuthenticationPrincipal UserDetails userDetails) {
+        // Filtra las notificaciones segun rol o usuario especifico.
         UserDTO user = authService.getCurrentUser(userDetails.getUsername());
         String role = user.getRoles().isEmpty() ? null : user.getRoles().get(0);
         return ResponseEntity.ok(notificationService.getNotificationsForUser(role, user.getId()));
@@ -53,6 +54,7 @@ public class NotificationController {
 
     @PutMapping("/read-all")
     public ResponseEntity<Void> markAllAsRead(@AuthenticationPrincipal UserDetails userDetails) {
+        // Marca como leidas todas las notificaciones visibles para el usuario actual.
         UserDTO user = authService.getCurrentUser(userDetails.getUsername());
         String role = user.getRoles().isEmpty() ? null : user.getRoles().get(0);
         notificationService.markAllAsRead(role, user.getId());

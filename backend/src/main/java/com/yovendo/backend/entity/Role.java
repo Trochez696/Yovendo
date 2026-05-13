@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+// Rol funcional usado para controlar permisos en endpoints y vistas.
 public class Role {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

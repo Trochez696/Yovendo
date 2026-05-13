@@ -8,6 +8,7 @@ import java.util.List;
 
 @Repository
 public interface InventoryRepository extends JpaRepository<InventoryItem, Long> {
+    // Busquedas frecuentes del modulo de inventario.
     List<InventoryItem> findByQuantityLessThanEqual(int minStock);
     List<InventoryItem> findByNameContainingIgnoreCase(String name);
 }

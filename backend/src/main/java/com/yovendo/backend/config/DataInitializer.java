@@ -21,13 +21,13 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        // Crear roles si no existen
+        // Datos base necesarios para que el sistema pueda iniciar con roles conocidos.
         createRoleIfNotExists("ADMIN", "Administrador del sistema");
         createRoleIfNotExists("DIRECTOR", "Director de ventas");
         createRoleIfNotExists("CONSULTOR", "Consultor de ventas");
         createRoleIfNotExists("SUPERVISOR", "Supervisor de inventario");
 
-        // Crear usuario admin si no existe
+        // Usuario inicial para entrar por primera vez al panel de administracion.
         if (!userRepository.existsByUsername("admin")) {
             Role adminRole = roleRepository.findByName("ADMIN").orElseThrow();
             User admin = User.builder()

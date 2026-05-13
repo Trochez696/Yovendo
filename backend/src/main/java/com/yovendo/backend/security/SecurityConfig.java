@@ -30,23 +30,30 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
+    // Filtro que lee el JWT antes de que Spring procese autenticacion normal.
     private final JwtAuthenticationFilter jwtAuthFilter;
+    // Servicio que sabe cargar usuarios desde la base de datos.
     private final UserDetailsService userDetailsService;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        // API sin sesiones: /auth es publico y el resto exige JWT valido.
         http
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(auth -> auth
+                // Login y consulta de autenticacion quedan abiertos.
                 .requestMatchers("/api/auth/**").permitAll()
+                // La ruta de usuarios queda protegida a nivel general para ADMIN.
                 .requestMatchers("/api/users/**").hasRole("ADMIN")
+                // Todo lo demas requiere estar autenticado.
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
             .authenticationProvider(authenticationProvider())
+            // El filtro JWT se ejecuta antes del filtro estandar de username/password.
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
@@ -54,6 +61,7 @@ public class SecurityConfig {
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
+        // Permite llamadas desde los puertos habituales del frontend local.
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(List.of("http://localhost:5173", "http://localhost:3000"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
@@ -67,6 +75,7 @@ public class SecurityConfig {
 
     @Bean
     public AuthenticationProvider authenticationProvider() {
+        // Autenticacion por base de datos usando el servicio de usuarios y BCrypt.
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider(userDetailsService);
         authProvider.setPasswordEncoder(passwordEncoder());
         return authProvider;

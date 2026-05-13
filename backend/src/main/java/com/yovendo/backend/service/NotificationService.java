@@ -18,13 +18,14 @@ public class NotificationService {
     public List<NotificationDTO> getNotificationsForUser(String role, Long userId) {
         List<Notification> notifications;
         
+        // Primero se toman alertas directas del usuario y luego las de su rol.
         // Primero notificaciones específicas del usuario
         List<Notification> userNotifications = notificationRepository.findByRecipientIdAndReadFalse(userId);
         
         // Luego notificaciones del rol
         List<Notification> roleNotifications = notificationRepository.findByRecipientRoleAndReadFalse(role);
         
-        // Combinar y eliminar duplicados
+        // Combinar y eliminar duplicados para evitar mostrar dos veces la misma alerta.
         notifications = new java.util.ArrayList<>(userNotifications);
         for (Notification n : roleNotifications) {
             if (!notifications.stream().anyMatch(n2 -> n2.getId().equals(n.getId()))) {
@@ -47,6 +48,7 @@ public class NotificationService {
 
     @Transactional
     public NotificationDTO createNotification(String message, String recipientRole, Long recipientId, String type) {
+        // Crea una notificacion sin leer que puede ir dirigida a un rol o usuario concreto.
         Notification notification = Notification.builder()
                 .message(message)
                 .recipientRole(recipientRole)

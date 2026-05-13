@@ -9,9 +9,10 @@ public class Activity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String description;
-    private String type; // seguimiento, venta, control, etc.
+    // Clasifica la actividad: seguimiento, venta, control, etc.
+    private String type;
     private LocalDateTime date;
     @ManyToOne
     private User user;
-    // Getters y setters
+    // Pendiente de implementar getters y setters si esta entidad se usa directamente.
 }
