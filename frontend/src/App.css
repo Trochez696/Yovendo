@@ -1,11 +1,16 @@
 :root {
-  --bg-1: #f5f3ec;
-  --bg-2: #e6f4ef;
-  --surface: rgba(255, 255, 255, 0.84);
-  --line: #d8ddd7;
-  --text: #1d2621;
-  --accent: #0f7a63;
-  --accent-2: #ed7c32;
+  --bg-1: #f8f6ee;
+  --bg-2: #dff3ea;
+  --ink: #102028;
+  --muted: #4d5f66;
+  --surface: rgba(255, 255, 255, 0.78);
+  --surface-strong: #ffffff;
+  --line: rgba(15, 53, 69, 0.14);
+  --brand: #087e8b;
+  --brand-2: #ff7a2f;
+  --ok: #157347;
+  --warn: #a11b1b;
+  --shadow: 0 14px 36px rgba(18, 53, 66, 0.14);
 }
 
 * {
@@ -14,18 +19,20 @@
 
 body {
   margin: 0;
-  font-family: "Trebuchet MS", "Verdana", sans-serif;
-  color: var(--text);
-  background: radial-gradient(circle at top left, var(--bg-2), var(--bg-1) 55%);
+  color: var(--ink);
+  background:
+    radial-gradient(circle at 8% 5%, rgba(255, 122, 47, 0.2), transparent 38%),
+    radial-gradient(circle at 90% 10%, rgba(8, 126, 139, 0.2), transparent 42%),
+    linear-gradient(135deg, var(--bg-1), var(--bg-2));
 }
 
 .container {
-  /* Contenedor principal del panel. */
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 24px;
+  /* Marco principal del dashboard con lectura comoda en desktop y movil. */
   position: relative;
+  max-width: 1220px;
+  margin: 0 auto;
   min-height: 100vh;
+  padding: 30px 20px 40px;
 }
 
 .login-page {
@@ -38,7 +45,6 @@ body {
 }
 
 .row {
-  /* Fila flexible para formularios y cabeceras responsivas. */
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
@@ -49,44 +55,277 @@ body {
 .dashboard-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 16px;
+  gap: 18px;
 }
 
 .card {
-  /* Bloque visual para cada modulo del dashboard. */
-  border: 1px solid #d7dde5;
+  /* Tarjeta con efecto glass para elevar el look sin perder legibilidad. */
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 18px;
+  margin: 12px 0;
+  background: var(--surface);
+  backdrop-filter: blur(8px);
+  box-shadow: var(--shadow);
+  animation: rise-in 520ms ease both;
+}
+
+.bg-shape {
+  position: fixed;
+  z-index: -1;
+  width: 320px;
+  height: 320px;
+  filter: blur(4px);
+  opacity: 0.55;
+  pointer-events: none;
+  animation: float 10s ease-in-out infinite;
+}
+
+.bg-shape-a {
+  top: -70px;
+  left: -80px;
+  border-radius: 52% 48% 40% 60% / 55% 41% 59% 45%;
+  background: radial-gradient(circle at 30% 30%, #fff4ea, #ff9f68);
+}
+
+.bg-shape-b {
+  right: -95px;
+  bottom: 3%;
+  border-radius: 63% 37% 58% 42% / 45% 60% 40% 55%;
+  background: radial-gradient(circle at 30% 20%, #d6f8fd, #3aa8bb);
+  animation-delay: -3s;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  color: #0e2933;
+}
+
+h1 {
+  font-size: clamp(1.8rem, 2.8vw, 2.7rem);
+  letter-spacing: -0.02em;
+}
+
+h2 {
+  font-size: clamp(1.18rem, 1.8vw, 1.45rem);
+  margin-bottom: 10px;
+}
+
+h3 {
+  margin: 16px 0 10px;
+}
+
+p {
+  margin: 0;
+  color: var(--muted);
+}
+
+input,
+select,
+button {
   border-radius: 12px;
-  padding: 16px;
-  margin: 14px 0;
-  background: #fff;
-}
-
-input, select, button {
-  padding: 10px 12px;
-  border-radius: 10px;
-  border: 1px solid #c4cfdd;
+  border: 1px solid #bed0d8;
   font: inherit;
+  min-height: 42px;
 }
 
-input:focus, select:focus {
-  outline: 2px solid #afdcca;
-  border-color: var(--accent);
+input,
+select {
+  padding: 9px 12px;
+  background: rgba(255, 255, 255, 0.92);
+  transition: box-shadow 180ms ease, border-color 180ms ease, transform 180ms ease;
+}
+
+input:focus,
+select:focus {
+  outline: none;
+  border-color: var(--brand);
+  box-shadow: 0 0 0 4px rgba(8, 126, 139, 0.17);
+  transform: translateY(-1px);
 }
 
 button {
-  /* Boton primario usado en acciones del panel. */
-  background: #00395f;
-  color: #fff;
+  padding: 9px 16px;
   border: none;
+  color: #fff;
+  background: linear-gradient(120deg, var(--brand), #0ea5b5);
   cursor: pointer;
+  font-weight: 700;
+  transition: transform 180ms ease, box-shadow 180ms ease, filter 180ms ease;
+}
+
+button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 22px rgba(8, 126, 139, 0.32);
+  filter: saturate(1.05);
+}
+
+button:active {
+  transform: translateY(0);
 }
 
 button:disabled {
-  opacity: 0.65;
+  opacity: 0.66;
   cursor: not-allowed;
+}
+
+.form-grid > * {
+  flex: 1 1 180px;
+}
+
+.form-stack {
+  display: grid;
+  gap: 10px;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  padding: 5px 10px;
+  font-size: 0.77rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: rgba(8, 126, 139, 0.13);
+  color: #0d5463;
+}
+
+.badge.role {
+  background: rgba(255, 122, 47, 0.18);
+  color: #8d3a0a;
+}
+
+.list {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.list-item {
+  background: var(--surface-strong);
+  border: 1px solid rgba(12, 85, 98, 0.12);
+  border-left: 4px solid var(--brand-2);
+  border-radius: 12px;
+  padding: 10px 12px;
+  color: #26434c;
+  animation: slide-in 420ms ease both;
+}
+
+.table-wrap {
+  overflow-x: auto;
+  border-radius: 12px;
+  border: 1px solid rgba(12, 85, 98, 0.14);
+}
+
+.kpi-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: rgba(255, 255, 255, 0.86);
+}
+
+.kpi-table th,
+.kpi-table td {
+  padding: 11px;
+  text-align: left;
+  border-bottom: 1px solid rgba(9, 72, 84, 0.12);
+}
+
+.kpi-table th {
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #31535e;
+  background: rgba(8, 126, 139, 0.08);
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 10px;
+}
+
+.stat-box {
+  border-radius: 12px;
+  padding: 12px;
+  background: linear-gradient(145deg, #fff, #f4fbfc);
+  border: 1px solid rgba(8, 126, 139, 0.16);
+}
+
+.ok {
+  color: var(--ok);
+  font-weight: 700;
+}
+
+.warn,
+.error {
+  color: var(--warn);
+  font-weight: 700;
 }
 
 .form-message {
   flex-basis: 100%;
-  color: #334155;
+  color: #2b4a54;
+}
+
+.reveal {
+  animation: rise-in 550ms ease both;
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(18px);
+  }
+}
+
+@media (max-width: 760px) {
+  .container {
+    padding: 22px 14px 30px;
+  }
+
+  .card {
+    padding: 14px;
+  }
+
+  .row {
+    align-items: stretch;
+  }
+
+  button,
+  input,
+  select {
+    width: 100%;
+  }
 }
