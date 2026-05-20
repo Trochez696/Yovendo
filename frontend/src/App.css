@@ -27,7 +27,7 @@ body {
 }
 
 .container {
-  /* Marco principal del dashboard con lectura comoda en desktop y movil. */
+  /* Marco principal con estructura de web app tipo sitio moderno. */
   position: relative;
   max-width: 1220px;
   margin: 0 auto;
@@ -44,12 +44,50 @@ body {
   width: min(520px, 95%);
 }
 
+.website-login {
+  text-align: left;
+}
+
+.eyebrow {
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: #1f6f7f;
+}
+
 .row {
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
+}
+
+.top-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.66);
+  border-radius: 14px;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  backdrop-filter: blur(8px);
+}
+
+.brand {
+  font-size: 1.08rem;
+  letter-spacing: 0.04em;
+  color: #104450;
+}
+
+.hero {
+  padding: 24px;
+  background:
+    radial-gradient(circle at 80% 10%, rgba(14, 165, 181, 0.15), transparent 28%),
+    radial-gradient(circle at 5% 80%, rgba(255, 122, 47, 0.13), transparent 24%),
+    var(--surface);
 }
 
 .dashboard-grid {

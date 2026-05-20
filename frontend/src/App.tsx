@@ -130,9 +130,10 @@ function App() {
       <main className="container login-page">
         <div className="bg-shape bg-shape-a" />
         <div className="bg-shape bg-shape-b" />
-        <section className="login-card card reveal">
+        <section className="login-card card reveal website-login">
+          <p className="eyebrow">Plataforma comercial</p>
           <h1>Yovendo</h1>
-          <p>Inicia sesion para acceder segun tu perfil.</p>
+          <p>Gestiona ventas, inventario y rendimiento del equipo en un solo lugar.</p>
           <form onSubmit={login} className="form-stack">
             <input name="username" placeholder="Usuario" />
             <input name="password" type="password" placeholder="Contrasena" />
@@ -148,13 +149,21 @@ function App() {
     <main className="container">
       <div className="bg-shape bg-shape-a" />
       <div className="bg-shape bg-shape-b" />
-      <header className="row">
-        <div>
-          <h1>Yovendo Panel</h1>
-          <p>{me?.username} | perfil: <span className="badge role">{role}</span></p>
+      <header className="top-nav reveal">
+        <strong className="brand">Yovendo</strong>
+        <div className="row">
+          <span className="badge role">Perfil: {role}</span>
+          <button onClick={logout}>Cerrar sesion</button>
         </div>
-        <button onClick={logout}>Cerrar sesion</button>
       </header>
+
+      <section className="hero card reveal">
+        <p className="eyebrow">Panel inteligente</p>
+        <h1>Hola, {me?.username}</h1>
+        <p>
+          Este espacio concentra tu operacion diaria con una experiencia visual de sitio web moderna y dinamica.
+        </p>
+      </section>
 
       <section className="card reveal">
         <h2>Notificaciones</h2>
